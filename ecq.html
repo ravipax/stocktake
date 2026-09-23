@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Icy Spicy ECQ Stock Audit</title>
+    <!-- SheetJS library for .xlsx file generation -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #d92d20;
+            --primary-hover: #b42318;
+            --zone1-color: #d92d20;
+            --zone1-bg: #fef3f2;
+            --zone1-border: #fda29b;
+            --zone2-color: #175cd3;
+            --zone2-bg: #eff8ff;
+            --zone2-border: #84caff;
+            --combined-color: #027a48;
+            --combined-bg: #ecfdf3;
+            --combined-border: #6ce9a6;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-dark);
+            padding: 16px;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            background: var(--surface);
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: #d92d20;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: -0.5px;
+            box-shadow: 0 2px 4px rgba(217, 45, 32, 0.25);
+        }
+
+        .brand-title h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .brand-title p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            border: 1px solid #20ba5a;
+        }
+        .btn-whatsapp:hover {
+            background: #20ba5a;
+        }
+
+        .btn-excel {
+            background: #107c41;
+            color: #ffffff;
+            border: 1px solid #0b552c;
+        }
+        .btn-excel:hover {
+            background: #0e6b37;
+        }
+
+        .btn-print {
+            background: #f0f9ff;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+        }
+        .btn-print:hover {
+            background: #e0f2fe;
+        }
+
+        /* Zone Cards */
+        .zones-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .zone-card {
+            flex: 1;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .zone-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .zone-card.zone-1.active {
+            border-color: #ef4444;
+            background: #fffafa;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+        }
+
+        .zone-card.zone-2.active {
+            border-color: #3b82f6;
+            background: #f8faff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        }
+
+        .zone-card.combined.active {
+            border-color: #22c55e;
+            background: #f8fdf9;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+        }
+
+        .zone-badge {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .zone-1 .zone-badge { color: #d92d20; }
+        .zone-2 .zone-badge { color: #175cd3; }
+        .combined .zone-badge { color: #027a48; }
+
+        .zone-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .zone-stat {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .zone-1 .zone-stat { color: #d92d20; }
+        .zone-2 .zone-stat { color: #175cd3; }
+        .combined .zone-stat { color: #027a48; }
+
+        /* Filter Controls */
+        .filter-bar {
+            background: var(--surface);
+            padding: 12px 16px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-field {
+            flex: 2;
+            min-width: 220px;
+        }
+
+        .search-field input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .search-field input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .category-select-wrapper {
+            flex: 1;
+            min-width: 170px;
+        }
+
+        .category-select-wrapper select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-add-item {
+            padding: 8px 16px;
+            background: #eff8ff;
+            color: #175cd3;
+            border: 1px solid #b2ddff;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-add-item:hover {
+            background: #dbeafe;
+        }
+
+        .btn-reset-app {
+            padding: 8px 14px;
+            background: #fef3f2;
+            color: #b42318;
+            border: 1px solid #fecdca;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+        }
+        .btn-reset-app:hover {
+            background: #fee4e2;
+        }
+
+        /* Active Banner */
+        .active-banner {
+            padding: 9px 16px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 0.82rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+            border-top: none;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .active-banner.zone-1 {
+            background: #fee4e2;
+            color: #991b1b;
+            border-color: #fecdca;
+        }
+
+        .active-banner.zone-2 {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        .active-banner.combined {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        /* Stock Table */
+        .table-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
+        }
+
+        table.stock-table {
+            width: 100%;
+            min-width: 580px;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        table.stock-table th {
+            background: #f8fafc;
+            padding: 10px 14px;
+            font-size: 0.73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        table.stock-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        table.stock-table tr:hover {
+            background-color: #fcfdfe;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .item-category {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .unit-pill {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            min-width: 36px;
+        }
+
+        .count-input-box {
+            width: 58px;
+            height: 34px;
+            text-align: center;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.15s;
+        }
+
+        .zone-1 .count-input-box {
+            border: 1.5px solid #fca5a5;
+            background: #fff5f5;
+            color: #b91c1c;
+        }
+        .zone-1 .count-input-box:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+        .zone-2 .count-input-box {
+            border: 1.5px solid #93c5fd;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .zone-2 .count-input-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Steppers */
+        .stepper-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-step {
+            height: 32px;
+            min-width: 32px;
+            padding: 0 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: filter 0.1s;
+        }
+        .btn-step:hover {
+            filter: brightness(0.95);
+        }
+
+        .btn-step-minus {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-step-plus1 {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .btn-step-plus5 {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .remarks-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            outline: none;
+            background: #fff;
+            color: #334155;
+        }
+        .remarks-input:focus {
+            border-color: #94a3b8;
+        }
+
+        .total-pill {
+            display: inline-block;
+            background: #ecfdf3;
+            color: #027a48;
+            border: 1px solid #a6f4c5;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        /* Modal Overlays & Cards */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 440px;
+            padding: 22px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12);
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 14px;
+        }
+
+        .excel-card-option {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            background: #ffffff;
+            margin-bottom: 12px;
+            transition: all 0.15s;
+        }
+        .excel-card-option:hover {
+            border-color: #94a3b8;
+        }
+        .excel-card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .excel-card-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.35;
+        }
+        .btn-action-primary {
+            padding: 8px 14px;
+            background: #107c41;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action-primary:hover {
+            background: #0e6b37;
+        }
+        .btn-action-whatsapp {
+            padding: 8px 14px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action-whatsapp:hover {
+            background: #20ba5a;
+        }
+        .btn-action-secondary {
+            padding: 8px 12px;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-action-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .btn-cancel {
+            padding: 8px 14px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #475569;
+        }
+
+        .btn-confirm {
+            padding: 8px 16px;
+            background: #d92d20;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Mobile-First & Responsive Enhancements */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 8px;
+            }
+            .app-header {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+            .brand-logo {
+                width: 34px;
+                height: 34px;
+                font-size: 1rem;
+            }
+            .brand-title h1 {
+                font-size: 1.1rem;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .btn-header {
+                flex: 1;
+                justify-content: center;
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+            .zones-grid {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            .zone-card {
+                padding: 10px 14px;
+            }
+            .zone-title {
+                font-size: 0.98rem;
+            }
+            .filter-bar {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .search-field {
+                flex: 100%;
+                min-width: 100%;
+            }
+            .category-select-wrapper {
+                flex: 1;
+                min-width: 130px;
+            }
+            .btn-add-item {
+                padding: 8px 10px;
+                font-size: 0.82rem;
+            }
+            .btn-reset-app {
+                padding: 8px 10px;
+                font-size: 0.82rem;
+            }
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            table.stock-table {
+                min-width: 580px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body { padding: 0; background: white; }
+            .app-header, .filter-bar, .stepper-group, .actions, .btn-header, .btn-add-item, .btn-reset-app {
+                display: none !important;
+            }
+            .zones-grid { margin-bottom: 10px; }
+            .table-container { border: none; box-shadow: none; }
+            table.stock-table th, table.stock-table td { padding: 6px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="brand-area">
+            <div class="brand-logo">IS</div>
+            <div class="brand-title">
+                <h1>Icy Spicy ECQ Stock Audit</h1>
+                <p>Standalone Local Version</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header btn-whatsapp" onclick="shareWhatsApp()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.174.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+                WhatsApp
+            </button>
+            <button class="btn-header btn-excel" onclick="openExcelModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25q.33 0 .59.25t.26.58v15.84q0 .33-.26.58t-.59.25L7.83 22q-.27 0-.52-.15t-.37-.41L3.06 15.6q-.19-.29-.19-.6V9q0-.31.19-.6l3.88-5.84q.12-.26.37-.41t.52-.15zM12.9 8.25l-2.07 3.73l-2.06-3.73H7.03l2.93 5l-3.05 5.25h1.76l2.16-3.92l2.17 3.92h1.74l-3.04-5.25l2.94-5z"/></svg>
+                Excel
+            </button>
+            <button class="btn-header btn-print" onclick="window.print()">Print</button>
+        </div>
+    </header>
+
+    <!-- Zone Cards -->
+    <div class="zones-grid">
+        <div class="zone-card zone-1 active" id="card-zone-1" onclick="switchZone('zone-1')">
+            <div class="zone-badge">ZONE 1</div>
+            <div class="zone-title">Shop / Front Display</div>
+            <div class="zone-stat" id="stat-zone-1">0 / 204 Items</div>
+        </div>
+        <div class="zone-card zone-2" id="card-zone-2" onclick="switchZone('zone-2')">
+            <div class="zone-badge">ZONE 2</div>
+            <div class="zone-title">Storage Freezer</div>
+            <div class="zone-stat" id="stat-zone-2">0 / 204 Items</div>
+        </div>
+        <div class="zone-card combined" id="card-combined" onclick="switchZone('combined')">
+            <div class="zone-badge">COMBINED SUMMARY</div>
+            <div class="zone-title">Total Combined Stock</div>
+            <div class="zone-stat" id="stat-combined">0 Total Units</div>
+        </div>
+    </div>
+
+    <!-- Filter & Add Bar -->
+    <div class="filter-bar">
+        <div class="search-field">
+            <input type="text" id="searchInput" placeholder="Search item or category..." oninput="handleSearch()">
+        </div>
+        <div class="category-select-wrapper">
+            <select id="categoryFilter" onchange="handleCategoryChange()">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+        <button class="btn-add-item" onclick="openAddModal()">
+            <span>+ + Add</span>
+        </button>
+        <button class="btn-reset-app" onclick="confirmReset()">Reset</button>
+    </div>
+
+    <!-- Active Zone Banner -->
+    <div class="active-banner zone-1" id="activeBanner">
+        ACTIVE: ZONE 1 (SHOP / FRONT DISPLAY)
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <table class="stock-table">
+            <thead>
+                <tr id="tableHeaderRow">
+                    <th style="min-width: 180px;">ITEM & CATEGORY</th>
+                    <th style="width: 50px;">UNIT</th>
+                    <th id="th-count" style="width: 80px;">SHOP COUNT</th>
+                    <th id="th-stepper" style="width: 120px;">QUICK STEPPER</th>
+                    <th id="th-remarks" style="min-width: 140px;">NOTES / REMARKS</th>
+                </tr>
+            </thead>
+            <tbody id="stockTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Excel Export & Share Modal -->
+    <div class="modal-overlay" id="excelModal">
+        <div class="modal-card" style="max-width: 480px;">
+            <div class="modal-title" style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #107c41; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 0.9rem;">X</div>
+                    <span>Excel & WhatsApp Share</span>
+                </div>
+                <button onclick="closeExcelModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
+                Choose where to save your Excel spreadsheet or send it directly to WhatsApp.
+            </p>
+
+            <!-- Location & Download Option -->
+            <div class="excel-card-option">
+                <div class="excel-card-title">
+                    <span>1. Save to Device Location</span>
+                    <span style="background: #e2e8f0; color: #334155; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">.XLSX</span>
+                </div>
+                <div class="excel-card-desc">
+                    Pick your destination folder (Desktop, USB, or Documents) or download instantly.
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-action-primary" onclick="downloadExcelWithPicker()">
+                        📁 Choose Folder & Save
+                    </button>
+                    <button class="btn-action-secondary" onclick="quickDownloadExcel()">
+                        ⬇️ Quick Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- WhatsApp Share Option -->
+            <div class="excel-card-option" style="border-color: #bbf7d0; background: #f8fdf9;">
+                <div class="excel-card-title">
+                    <span style="color: #166534;">2. Share via WhatsApp</span>
+                    <span style="background: #25D366; color: white; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">INSTANT</span>
+                </div>
+                <div class="excel-card-desc" style="color: #166534;">
+                    Send the generated Excel file directly to a chat, or dispatch the text audit summary.
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-action-whatsapp" onclick="shareExcelFileWhatsApp()">
+                        📎 Share Excel in WhatsApp
+                    </button>
+                    <button class="btn-action-secondary" onclick="shareWhatsApp()">
+                        💬 Send Text Summary
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toggle filter -->
+            <div style="margin-top: 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; color: #475569; padding-left: 2px;">
+                <input type="checkbox" id="excelOnlyCounted" checked>
+                <label for="excelOnlyCounted">Export only items with counts / notes (uncheck for all 204 items)</label>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 18px;">
+                <button class="btn-cancel" onclick="closeExcelModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Custom Item Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-card">
+            <div class="modal-title">Add New Stock Item</div>
+            <div class="form-group">
+                <label>Item Name *</label>
+                <input type="text" id="modalItemName" placeholder="e.g. Schezwan Momo">
+            </div>
+            <div class="form-group">
+                <label>Category *</label>
+                <select id="modalItemCategory"></select>
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <select id="modalItemUnit">
+                    <option value="Pkt">Pkt (Packet)</option>
+                    <option value="Tub">Tub (Ice Cream 5L/1L)</option>
+                    <option value="Box">Box</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Can/Btl">Can/Btl (Drink)</option>
+                    <option value="Tray">Tray</option>
+                    <option value="Roll">Roll</option>
+                    <option value="Unit">Unit / Piece</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+                <button class="btn-confirm" onclick="saveNewItem()">Save Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const INITIAL_CATALOG = [{"id": "item_1", "name": "Alphonso Mango", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_2", "name": "Apricot Coconut", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_3", "name": "Badam Kesar", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_4", "name": "Bubble Gum", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_5", "name": "Butterscotch", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_6", "name": "Cheeky Chikoo", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_7", "name": "Choc Oreo", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_8", "name": "Cold Coffee", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_9", "name": "Cookies & Cream", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_10", "name": "Custard Apple", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_11", "name": "Exotic Rose/Gulkund", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_12", "name": "Green Mango", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_13", "name": "Gulab Jamun", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_14", "name": "Honeydew Melon", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_15", "name": "Jackfruit", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_16", "name": "Jamun", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_17", "name": "Kaju Anjeer", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_18", "name": "Kaju Draksh", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_19", "name": "Lychee", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_20", "name": "Mad Mandarin", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_21", "name": "Motichoor Laddu", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_22", "name": "Mysore Pak", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_23", "name": "Passion Fruit", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_24", "name": "Pineapple Chaat", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_25", "name": "Pink Guava", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_26", "name": "Popping Candy", "category": "Ice Cream 5L", "unit": "Can/Btl"}, {"id": "item_27", "name": "Roasted Pistachio", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_28", "name": "Red Velvet", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_29", "name": "Salted Peanut", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_30", "name": "Silly Chilly", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_31", "name": "Strawberry", "category": "Ice Cream 5L", "unit": "Pkt"}, {"id": "item_32", "name": "Sweet Paan", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_33", "name": "Taro", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_34", "name": "Tender Coconut", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_35", "name": "Thandai", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_36", "name": "Tutti Frutti", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_37", "name": "Lavender", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_38", "name": "Vanilla Bean", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_39", "name": "Vegan and Sugar Free Dark Choclate", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_40", "name": "Watermelon", "category": "Ice Cream 5L", "unit": "Can/Btl"}, {"id": "item_41", "name": "Whiskey Walnut", "category": "Ice Cream 5L", "unit": "Tub"}, {"id": "item_42", "name": "Alphonso Mango 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_43", "name": "Badam Kesar 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_44", "name": "Cheeky Chikoo 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_45", "name": "Exotic Rose/Gulkund 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_46", "name": "Kaju Anjeer 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_47", "name": "Pink Guava 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_48", "name": "Sweet Paan 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_49", "name": "Tutti Frutti 1 Ltr", "category": "Ice Cream 1L", "unit": "Tub/5L"}, {"id": "item_50", "name": "Cassatta Rainbow", "category": "Cassatta", "unit": "Pcs"}, {"id": "item_51", "name": "Cassatta Chocolate", "category": "Cassatta", "unit": "Pcs"}, {"id": "item_52", "name": "Badaam Kesar Kulfi Pcs", "category": "Kulfi (Pcs)", "unit": "Pcs"}, {"id": "item_53", "name": "Malai Kulfi Pcs", "category": "Kulfi (Pcs)", "unit": "Pcs"}, {"id": "item_54", "name": "Pistachio Kulfi Pcs", "category": "Kulfi (Pcs)", "unit": "Pcs"}, {"id": "item_55", "name": "ROSE KULFI PCS", "category": "Kulfi (Pcs)", "unit": "Pcs"}, {"id": "item_56", "name": "Badaam Kesar Tray", "category": "Kulfi Trays", "unit": "Tray"}, {"id": "item_57", "name": "Rose Kulfi Tray", "category": "Kulfi Trays", "unit": "Tray"}, {"id": "item_58", "name": "Badaam Kesar Kulfi", "category": "Kulfi 5L", "unit": "Tub"}, {"id": "item_59", "name": "Rose   Kulfi", "category": "Kulfi 5L", "unit": "Tub"}, {"id": "item_60", "name": "Aloo Cheese Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_61", "name": "Chessy Corn Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_62", "name": "Paneer Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_63", "name": "Original Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_64", "name": "Pepper Mushroom Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_65", "name": "Schezwan Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_66", "name": "Spinach Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_67", "name": "Beetroot Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_68", "name": "Soya Momo", "category": "Momo", "unit": "Pkt"}, {"id": "item_69", "name": "Coriander Mint (1 Kg Pack)  BOX-8", "category": "Chutneys", "unit": "Box"}, {"id": "item_70", "name": "Khatta Methi Chutney ( Date Tamrind) 1kg BOX-6", "category": "Chutneys", "unit": "Box"}, {"id": "item_71", "name": "Pani Puri Paste 1kg  BOX-6", "category": "Chutneys", "unit": "Box"}, {"id": "item_72", "name": "Momo Chutney (5 Ltr)", "category": "Chutneys", "unit": "Tub/5L"}, {"id": "item_73", "name": "Bhaji (1Kg) BOX-8", "category": "Ready Food", "unit": "Box"}, {"id": "item_74", "name": "Pav Bun (4 pcs)  BOX-18", "category": "Ready Food", "unit": "Box"}, {"id": "item_75", "name": "Pindi Chole (1 kg) BOX-8", "category": "Ready Food", "unit": "Box"}, {"id": "item_76", "name": "Batata Vada (15 pcs)  BOX-6", "category": "Snacks & Samosa", "unit": "Box"}, {"id": "item_77", "name": "Bread Pakoda (10 pcs) BOX-10", "category": "Snacks & Samosa", "unit": "Box"}, {"id": "item_78", "name": "Dabeli PreMix  BOX-16", "category": "Snacks & Samosa", "unit": "Box"}, {"id": "item_79", "name": "Jumbo Punjabi Samosa with Cashews (14 pcs pack)5", "category": "Snacks & Samosa", "unit": "Pkt"}, {"id": "item_80", "name": "Paneer Pakoda (17 pcs) BOX-10", "category": "Snacks & Samosa", "unit": "Box"}, {"id": "item_81", "name": "Tandorri Paneer Samosa (12 pcs pack )", "category": "Snacks & Samosa", "unit": "Pkt"}, {"id": "item_82", "name": "Manchurian Ball 1 Kg", "category": "Rice & Noodles", "unit": "Kg"}, {"id": "item_83", "name": "Manchurian Gravy", "category": "Rice & Noodles", "unit": "Pkt"}, {"id": "item_84", "name": "Manchurian Noodles Chowmein (285g BOX-12)", "category": "Rice & Noodles", "unit": "Box"}, {"id": "item_85", "name": "Schezwan Fried Rice  BOX-12", "category": "Rice & Noodles", "unit": "Box"}, {"id": "item_86", "name": "Tawa Pulao (285 gm) BOX-12", "category": "Rice & Noodles", "unit": "Box"}, {"id": "item_87", "name": "Idli Sambhar  1KG", "category": "Rice & Noodles", "unit": "Kg"}, {"id": "item_88", "name": "Aloo Tikki Chat (Pack of 12 pcs)", "category": "Chaat", "unit": "Pkt"}, {"id": "item_89", "name": "Bhel Mix (400 gm)  Dry", "category": "Chaat", "unit": "Pkt"}, {"id": "item_90", "name": "Dahi Bhalla Chat (pack of 40 pcs)", "category": "Chaat", "unit": "Pkt"}, {"id": "item_91", "name": "Papdi (700 gm ) Dry", "category": "Chaat", "unit": "Pkt"}, {"id": "item_92", "name": "Spl Isf Franky Masala (1 kg)", "category": "Masalas", "unit": "Kg"}, {"id": "item_93", "name": "Almond Roasted (1 Kg)", "category": "Seeds & Nuts", "unit": "Kg"}, {"id": "item_94", "name": "Cashew Roasted (1 Kg)", "category": "Seeds & Nuts", "unit": "Kg"}, {"id": "item_95", "name": "Cherry (1 Kg)", "category": "Seeds & Nuts", "unit": "Kg"}, {"id": "item_96", "name": "Chia Seed (1 Kg)", "category": "Seeds & Nuts", "unit": "Kg"}, {"id": "item_97", "name": "Pista Meal (1 Kg)", "category": "Seeds & Nuts", "unit": "Kg"}, {"id": "item_98", "name": "Kashmiri Chai", "category": "Beverages", "unit": "Pkt"}, {"id": "item_99", "name": "Ginger Chai", "category": "Beverages", "unit": "Pkt"}, {"id": "item_100", "name": "Cardamom Chai", "category": "Beverages", "unit": "Pkt"}, {"id": "item_101", "name": "Masala Chai", "category": "Beverages", "unit": "Pkt"}, {"id": "item_102", "name": "Traditional Filter Coffee (250 ML)", "category": "Beverages", "unit": "Pkt"}, {"id": "item_103", "name": "U500 Falooda Cup (1 Pack = 50 pcs)", "category": "Chips & Cups", "unit": "Pkt"}, {"id": "item_104", "name": "Curly Chips (2.27 Kg)", "category": "Chips & Cups", "unit": "Kg"}, {"id": "item_105", "name": "Slim Chips (3 Kg Pack)", "category": "Chips & Cups", "unit": "Kg"}, {"id": "item_106", "name": "Changs Thin Noodles CTN", "category": "Other Items", "unit": "Unit"}, {"id": "item_107", "name": "Mango Pulp Bucket for Shake", "category": "Other Items", "unit": "Tub/5L"}, {"id": "item_108", "name": "Shake Powder", "category": "Other Items", "unit": "Unit"}, {"id": "item_109", "name": "Goli Soda  Jeera", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_110", "name": "Goli Soda Lemon", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_111", "name": "Goli Soda  Orange", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_112", "name": "Goli Soda - Mint", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_113", "name": "Goli Soda - Rose", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_114", "name": "Coke Classic", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_115", "name": "Coke Zero", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_116", "name": "Red Bull", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_117", "name": "Sprite", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_118", "name": "Solo", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_119", "name": "Limca", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_120", "name": "Thums Up", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_121", "name": "Sunkist", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_122", "name": "WATER 600ML", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_123", "name": "Fanta", "category": "Drinks", "unit": "Can/Btl"}, {"id": "item_124", "name": "Bhuture packet", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_125", "name": "Wrape Packet", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_126", "name": "Vanila Custard", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_127", "name": "Strawberry FORZEN", "category": "Grocery (Coles/Costco)", "unit": "Pkt"}, {"id": "item_128", "name": "Butter 2KG", "category": "Grocery (Coles/Costco)", "unit": "Kg"}, {"id": "item_129", "name": "Thickend Cream 600ML /300ML", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_130", "name": "Evaporated Milk Tray", "category": "Grocery (Coles/Costco)", "unit": "Tray"}, {"id": "item_131", "name": "Condonsed Milk Tray", "category": "Grocery (Coles/Costco)", "unit": "Tray"}, {"id": "item_132", "name": "FRZ Pomegranate seed", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_133", "name": "FRZ Peas 1KG", "category": "Grocery (Coles/Costco)", "unit": "Kg"}, {"id": "item_134", "name": "Chocolate Syrup Bottle", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_135", "name": "Waffle Cone Chocolate", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_136", "name": "Waffle Cone Red Velvet", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_137", "name": "Waffle Cone Original", "category": "Grocery (Coles/Costco)", "unit": "Unit"}, {"id": "item_138", "name": "TOMATO SAUCE 5L", "category": "Grocery (Coles/Costco)", "unit": "Tub/5L"}, {"id": "item_139", "name": "BIN BAG   56L", "category": "Grocery (Coles/Costco)", "unit": "Pkt"}, {"id": "item_140", "name": "Coriander fresh", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_141", "name": "Spring Onion Shallot", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_142", "name": "Capsicum Green", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_143", "name": "Green Chilli", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_144", "name": "Lemon/ Lime", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_145", "name": "Tomato", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_146", "name": "Potato 5 kg", "category": "Indian Grocer", "unit": "Kg"}, {"id": "item_147", "name": "Spring Onion10kg", "category": "Indian Grocer", "unit": "Kg"}, {"id": "item_148", "name": "Chick pea (CHANA)", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_149", "name": "Salt", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_150", "name": "Roasted Cumin powder", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_151", "name": "Black Salt", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_152", "name": "Ghee 1L", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_153", "name": "Maggi Masla Pouch", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_154", "name": "Everest Chiken 65 Masala", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_155", "name": "Diggi mirch powder", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_156", "name": "Sesame seed", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_157", "name": "Dabeli Peanuts", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_158", "name": "Maggi Tomato sauce 485g", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_159", "name": "Milk", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_160", "name": "Vegetable Oil 20L", "category": "Indian Grocer", "unit": "Unit"}, {"id": "item_161", "name": "500ML SUPA BOWL KRAFT -400PCS (MOMO)", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_162", "name": "SMALL LID FOR SUPA BOWL PET-400PCS", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_163", "name": "3 OZ ICECREAM CUPS-1000PCS - SINGLE", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_164", "name": "3 OZ PET DOME LID -ICECREAM - SINGLE", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_165", "name": "6 OZ ICECREAM CUPS-1000PCS - DOUBLE", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_166", "name": "6 OZ PET DOME LID -ICECREAM - DOUBLE", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_167", "name": "9 OZ ICECREAM CUPS-1000PCS - TRIPLE", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_168", "name": "9 OZ PET DOME LID -ICECREAM - TRIPLE", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_169", "name": "ICECREAM TASTING STICK", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_170", "name": "6 OZ COFFEE CUP WHITE/COLOUR 1000PCS", "category": "Packaging & Disposables", "unit": "Pcs"}, {"id": "item_171", "name": "8OZ COFFEE CUP LID WHITE PP", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_172", "name": "WOODEN SPOON (1000)", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_173", "name": "WOODEN FORK (1000)", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_174", "name": "WOODEN KNIFE (1000)", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_175", "name": "CANON PAPER STRAW INDIVIUL WARP(2000)", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_176", "name": "500ML SUGARCANE RECT CONTAINER(500)", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_177", "name": "500ML CONTAINER RECT LIDS (500)", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_178", "name": "750 ML SUGARCANE RECT CONTAINER(500)", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_179", "name": "750 ML CONTAINER RECT LIDS (500)", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_180", "name": "OVAL PLATE SUGARCANE", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_181", "name": "3 COMPARTMENT PLATE SUGARCANE", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_182", "name": "PANI PURI BOWL PACK", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_183", "name": "FACIAL TISUES PACK", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_184", "name": "WATER GLASS 200ML", "category": "Packaging & Disposables", "unit": "Can/Btl"}, {"id": "item_185", "name": "THERMAL PRINTER ROLL 80MM", "category": "Packaging & Disposables", "unit": "Roll"}, {"id": "item_186", "name": "THERMAL ROLL MINI- KIOSK", "category": "Packaging & Disposables", "unit": "Roll"}, {"id": "item_187", "name": "SMALL PAPER BAG", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_188", "name": "CARRY BAG -SMALL", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_189", "name": "CARRY BAG - MEDIUM", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_190", "name": "ALUFOIL BAG -MEDIUM", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_191", "name": "ALUFOIL BAG - KATHI ROLL", "category": "Packaging & Disposables", "unit": "Roll"}, {"id": "item_192", "name": "500ML TAKE AWAY CONTAINER", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_193", "name": "500ML TAKE AWAY  CONTAINER LID", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_194", "name": "GLASS CLEANER", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_195", "name": "FOOD SANITIZER 5L", "category": "Packaging & Disposables", "unit": "Tub/5L"}, {"id": "item_196", "name": "OVEN N GRILL CLEANER 5L", "category": "Packaging & Disposables", "unit": "Tub/5L"}, {"id": "item_197", "name": "FLOOR CLEANER 5L", "category": "Packaging & Disposables", "unit": "Tub/5L"}, {"id": "item_198", "name": "DISHWASHING LIQUID 5L", "category": "Packaging & Disposables", "unit": "Tub/5L"}, {"id": "item_199", "name": "BIN LINER 57-60 L", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_200", "name": "CHUX ROLL 45M -JUMBO", "category": "Packaging & Disposables", "unit": "Roll"}, {"id": "item_201", "name": "AIR FRESHNER", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_202", "name": "SANDWICH GLOVES BOX", "category": "Packaging & Disposables", "unit": "Box"}, {"id": "item_203", "name": "Sugar Sachets", "category": "Packaging & Disposables", "unit": "Pkt"}, {"id": "item_204", "name": "Assorted Foam Box", "category": "Packaging & Disposables", "unit": "Box"}];
+        const STORAGE_KEY = 'icy_spicy_audit_v5';
+
+        let appState = {
+            catalog: [],
+            counts: {},
+            activeZone: 'zone-1',
+            search: '',
+            selectedCategory: ''
+        };
+
+        function getStorage(key) {
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return localStorage.getItem(key);
+                }
+            } catch(e) {}
+            return null;
+        }
+        function setStorage(key, val) {
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    localStorage.setItem(key, val);
+                }
+            } catch(e) {}
+        }
+
+        function initApp() {
+            const saved = getStorage(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appState.catalog = parsed.catalog || [];
+                    appState.counts = parsed.counts || {};
+                    
+                    const existingNames = new Set(appState.catalog.map(i => i.name.toLowerCase()));
+                    INITIAL_CATALOG.forEach(item => {
+                        if (!existingNames.has(item.name.toLowerCase())) {
+                            appState.catalog.push(item);
+                        }
+                    });
+                } catch (e) {
+                    resetToInitial();
+                }
+            } else {
+                resetToInitial();
+            }
+
+            populateCategoryDropdowns();
+            renderTable();
+            updateStats();
+        }
+
+        function resetToInitial() {
+            appState.catalog = JSON.parse(JSON.stringify(INITIAL_CATALOG));
+            appState.counts = {};
+            saveState();
+        }
+
+        function saveState() {
+            setStorage(STORAGE_KEY, JSON.stringify({
+                catalog: appState.catalog,
+                counts: appState.counts
+            }));
+            updateStats();
+        }
+
+        function populateCategoryDropdowns() {
+            const categories = [...new Set(appState.catalog.map(i => i.category))].sort();
+            
+            const filterSelect = document.getElementById('categoryFilter');
+            filterSelect.innerHTML = '<option value="">All Categories</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                filterSelect.appendChild(opt);
+            });
+
+            const modalSelect = document.getElementById('modalItemCategory');
+            modalSelect.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                modalSelect.appendChild(opt);
+            });
+        }
+
+        function switchZone(zone) {
+            appState.activeZone = zone;
+            document.querySelectorAll('.zone-card').forEach(c => c.classList.remove('active'));
+            
+            const banner = document.getElementById('activeBanner');
+            banner.className = 'active-banner ' + zone;
+
+            if (zone === 'zone-1') {
+                document.getElementById('card-zone-1').classList.add('active');
+                banner.textContent = 'ACTIVE: ZONE 1 (SHOP / FRONT DISPLAY)';
+            } else if (zone === 'zone-2') {
+                document.getElementById('card-zone-2').classList.add('active');
+                banner.textContent = 'ACTIVE: ZONE 2 (STORAGE FREEZER)';
+            } else {
+                document.getElementById('card-combined').classList.add('active');
+                banner.textContent = 'ACTIVE: COMBINED SUMMARY (ALL ZONES)';
+            }
+
+            renderTableHeaders();
+            renderTable();
+        }
+
+        function renderTableHeaders() {
+            const tr = document.getElementById('tableHeaderRow');
+            if (appState.activeZone === 'zone-1') {
+                tr.innerHTML = `
+                    <th style="min-width: 180px;">ITEM & CATEGORY</th>
+                    <th style="width: 50px;">UNIT</th>
+                    <th style="width: 80px;">SHOP COUNT</th>
+                    <th style="width: 120px;">QUICK STEPPER</th>
+                    <th style="min-width: 140px;">NOTES / REMARKS</th>
+                `;
+            } else if (appState.activeZone === 'zone-2') {
+                tr.innerHTML = `
+                    <th style="min-width: 180px;">ITEM & CATEGORY</th>
+                    <th style="width: 50px;">UNIT</th>
+                    <th style="width: 80px;">STORAGE COUNT</th>
+                    <th style="width: 120px;">QUICK STEPPER</th>
+                    <th style="min-width: 140px;">NOTES / REMARKS</th>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <th style="min-width: 180px;">ITEM & CATEGORY</th>
+                    <th style="width: 50px;">UNIT</th>
+                    <th style="width: 80px;">SHOP</th>
+                    <th style="width: 80px;">STORAGE</th>
+                    <th style="width: 100px;">TOTAL UNITS</th>
+                    <th style="min-width: 140px;">NOTES / REMARKS</th>
+                `;
+            }
+        }
+
+        function getItemData(id) {
+            if (!appState.counts[id]) {
+                appState.counts[id] = { shop: 0, storage: 0, remarks: "" };
+            }
+            return appState.counts[id];
+        }
+
+        function changeCount(id, delta) {
+            const data = getItemData(id);
+            const key = appState.activeZone === 'zone-1' ? 'shop' : 'storage';
+            data[key] = Math.max(0, (data[key] || 0) + delta);
+            saveState();
+            
+            const input = document.getElementById(`count-${id}`);
+            if (input) input.value = data[key] === 0 ? '' : data[key];
+        }
+
+        function setCountDirect(id, val) {
+            const data = getItemData(id);
+            const key = appState.activeZone === 'zone-1' ? 'shop' : 'storage';
+            const num = parseInt(val) || 0;
+            data[key] = Math.max(0, num);
+            saveState();
+        }
+
+        function setRemarks(id, val) {
+            const data = getItemData(id);
+            data.remarks = val;
+            saveState();
+        }
+
+        function handleSearch() {
+            appState.search = document.getElementById('searchInput').value.trim().toLowerCase();
+            renderTable();
+        }
+
+        function handleCategoryChange() {
+            appState.selectedCategory = document.getElementById('categoryFilter').value;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = appState.catalog.filter(item => {
+                const matchesSearch = !appState.search || 
+                    item.name.toLowerCase().includes(appState.search) || 
+                    item.category.toLowerCase().includes(appState.search);
+                const matchesCategory = !appState.selectedCategory || item.category === appState.selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 28px; color: var(--text-muted);">No items found matching the filter.</td></tr>`;
+                return;
+            }
+
+            const isCombined = appState.activeZone === 'combined';
+            const countKey = appState.activeZone === 'zone-1' ? 'shop' : 'storage';
+
+            filtered.forEach(item => {
+                const row = document.createElement('tr');
+                const data = getItemData(item.id);
+                const countVal = data[countKey] || 0;
+                const shopVal = data.shop || 0;
+                const storageVal = data.storage || 0;
+                const totalVal = shopVal + storageVal;
+                const remarksVal = data.remarks || '';
+
+                if (!isCombined) {
+                    row.innerHTML = `
+                        <td>
+                            <div class="item-info">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-category">${item.category}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="unit-pill">${item.unit}</span>
+                        </td>
+                        <td>
+                            <input type="number" min="0" class="count-input-box" id="count-${item.id}" 
+                                value="${countVal > 0 ? countVal : ''}" 
+                                placeholder="0"
+                                onchange="setCountDirect('${item.id}', this.value)">
+                        </td>
+                        <td>
+                            <div class="stepper-group">
+                                <button class="btn-step btn-step-minus" onclick="changeCount('${item.id}', -1)">-1</button>
+                                <button class="btn-step btn-step-plus1" onclick="changeCount('${item.id}', 1)">+1</button>
+                                <button class="btn-step btn-step-plus5" onclick="changeCount('${item.id}', 5)">+5</button>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" class="remarks-input" placeholder="Remarks..." 
+                                value="${remarksVal.replace(/"/g, '&quot;')}" 
+                                onchange="setRemarks('${item.id}', this.value)">
+                        </td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td>
+                            <div class="item-info">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-category">${item.category}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="unit-pill">${item.unit}</span>
+                        </td>
+                        <td style="font-weight: 700; color: #d92d20;">${shopVal}</td>
+                        <td style="font-weight: 700; color: #175cd3;">${storageVal}</td>
+                        <td>
+                            <span class="total-pill">${totalVal}</span>
+                        </td>
+                        <td>
+                            <input type="text" class="remarks-input" placeholder="Remarks..." 
+                                value="${remarksVal.replace(/"/g, '&quot;')}" 
+                                onchange="setRemarks('${item.id}', this.value)">
+                        </td>
+                    `;
+                }
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            const totalItems = appState.catalog.length;
+            let shopCounted = 0;
+            let storageCounted = 0;
+            let combinedUnits = 0;
+
+            for (const id in appState.counts) {
+                const item = appState.counts[id];
+                if (item.shop > 0) shopCounted++;
+                if (item.storage > 0) storageCounted++;
+                combinedUnits += (item.shop || 0) + (item.storage || 0);
+            }
+
+            document.getElementById('stat-zone-1').textContent = `${shopCounted} / ${totalItems} Items`;
+            document.getElementById('stat-zone-2').textContent = `${storageCounted} / ${totalItems} Items`;
+            document.getElementById('stat-combined').textContent = `${combinedUnits} Total Units`;
+        }
+
+        function openAddModal() {
+            document.getElementById('modalItemName').value = '';
+            document.getElementById('addModal').classList.add('open');
+            document.getElementById('modalItemName').focus();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('open');
+        }
+
+        function saveNewItem() {
+            const name = document.getElementById('modalItemName').value.trim();
+            const category = document.getElementById('modalItemCategory').value;
+            const unit = document.getElementById('modalItemUnit').value;
+
+            if (!name) {
+                alert('Please enter an item name.');
+                return;
+            }
+
+            const newItem = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                category: category,
+                unit: unit
+            };
+
+            appState.catalog.unshift(newItem);
+            saveState();
+            populateCategoryDropdowns();
+            renderTable();
+            closeAddModal();
+        }
+
+        function openExcelModal() {
+            document.getElementById('excelModal').classList.add('open');
+        }
+
+        function closeExcelModal() {
+            document.getElementById('excelModal').classList.remove('open');
+        }
+
+        function generateExcelBlob(onlyCounted = true) {
+            const rows = [];
+            appState.catalog.forEach(item => {
+                const d = appState.counts[item.id] || { shop: 0, storage: 0, remarks: "" };
+                const total = (d.shop || 0) + (d.storage || 0);
+                if (!onlyCounted || total > 0 || (d.remarks && d.remarks.trim() !== '')) {
+                    rows.push({
+                        "Category": item.category,
+                        "Item Name": item.name,
+                        "Unit": item.unit,
+                        "Shop / Front Display": d.shop || 0,
+                        "Storage Freezer": d.storage || 0,
+                        "Combined Total Units": total,
+                        "Notes / Remarks": d.remarks || ""
+                    });
+                }
+            });
+
+            if (rows.length === 0) {
+                return generateExcelBlob(false);
+            }
+
+            if (typeof XLSX !== 'undefined') {
+                const ws = XLSX.utils.json_to_sheet(rows);
+                ws['!cols'] = [
+                    { wch: 22 },
+                    { wch: 36 },
+                    { wch: 10 },
+                    { wch: 20 },
+                    { wch: 18 },
+                    { wch: 20 },
+                    { wch: 30 }
+                ];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Stock Audit");
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            } else {
+                let csv = "Category,Item Name,Unit,Shop / Front Display,Storage Freezer,Combined Total Units,Notes / Remarks\n";
+                rows.forEach(r => {
+                    csv += `"${r.Category}","${r["Item Name"]}","${r.Unit}",${r["Shop / Front Display"]},${r["Storage Freezer"]},${r["Combined Total Units"]},"${r["Notes / Remarks"]}"\n`;
+                });
+                return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            }
+        }
+
+        function downloadExcelWithPicker() {
+            var onlyCounted = document.getElementById('excelOnlyCounted').checked;
+            var blob = generateExcelBlob(onlyCounted);
+            var dateStr = new Date().toISOString().slice(0, 10);
+            var filename = "Icy_Spicy_Stock_Audit_" + dateStr + ".xlsx";
+
+            if (window.showSaveFilePicker) {
+                window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{
+                        description: 'Excel Spreadsheet (*.xlsx)',
+                        accept: {
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+                        }
+                    }]
+                }).then(function(handle) {
+                    return handle.createWritable().then(function(writable) {
+                        return writable.write(blob).then(function() {
+                            return writable.close();
+                        });
+                    });
+                }).then(function() {
+                    alert("Excel file saved successfully!");
+                    closeExcelModal();
+                }).catch(function(err) {
+                    if (err && err.name === 'AbortError') return;
+                    quickDownloadExcel();
+                });
+                return;
+            }
+
+            quickDownloadExcel();
+        }
+
+        function quickDownloadExcel() {
+            const onlyCounted = document.getElementById('excelOnlyCounted').checked;
+            const blob = generateExcelBlob(onlyCounted);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const filename = `Icy_Spicy_Stock_Audit_${dateStr}.xlsx`;
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+        }
+
+        function shareExcelFileWhatsApp() {
+            var onlyCounted = document.getElementById('excelOnlyCounted').checked;
+            var blob = generateExcelBlob(onlyCounted);
+            var dateStr = new Date().toISOString().slice(0, 10);
+            var filename = "Icy_Spicy_Stock_Audit_" + dateStr + ".xlsx";
+            
+            try {
+                if (navigator.canShare && typeof File !== 'undefined') {
+                    var file = new File([blob], filename, {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
+                    if (navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: 'Icy Spicy Stock Audit',
+                            text: 'Icy Spicy ECQ Stock Audit - ' + new Date().toLocaleDateString()
+                        }).then(function() {
+                            closeExcelModal();
+                        }).catch(function(err) {
+                            if (err && err.name === 'AbortError') return;
+                            fallbackWhatsAppShare();
+                        });
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            fallbackWhatsAppShare();
+        }
+
+        function fallbackWhatsAppShare() {
+            quickDownloadExcel();
+            alert("Excel spreadsheet downloaded to your device.\n\nOpening WhatsApp now so you can attach it to your chat!");
+            shareWhatsApp();
+            closeExcelModal();
+        }
+
+        function confirmReset() {
+            const choice = confirm("Do you want to reset all counts to 0?\n(Click CANCEL if you want to perform a complete catalog reinstall)");
+            if (choice) {
+                for (const id in appState.counts) {
+                    appState.counts[id].shop = 0;
+                    appState.counts[id].storage = 0;
+                }
+                saveState();
+                renderTable();
+            } else {
+                if (confirm("Reset everything including catalog to fresh installation? Custom added items will be wiped.")) {
+                    try { if(window.localStorage) localStorage.removeItem(STORAGE_KEY); } catch(e){}
+                    resetToInitial();
+                    populateCategoryDropdowns();
+                    renderTable();
+                }
+            }
+        }
+
+        function shareWhatsApp() {
+            let message = "*ICY SPICY ECQ STOCK AUDIT*\n";
+            message += "📅 Date: " + new Date().toLocaleDateString() + "\n\n";
+
+            let shopText = "";
+            let storageText = "";
+            let totalUnits = 0;
+
+            appState.catalog.forEach(item => {
+                const d = appState.counts[item.id];
+                if (d) {
+                    const rem = d.remarks ? ' (' + d.remarks + ')' : '';
+                    if (d.shop > 0) {
+                        shopText += "• " + item.name + ": *" + d.shop + "* " + item.unit + rem + "\n";
+                        totalUnits += d.shop;
+                    }
+                    if (d.storage > 0) {
+                        storageText += "• " + item.name + ": *" + d.storage + "* " + item.unit + rem + "\n";
+                        totalUnits += d.storage;
+                    }
+                }
+            });
+
+            if (totalUnits === 0) {
+                alert("No stock counts entered yet.");
+                return;
+            }
+
+            if (shopText) {
+                message += "*SHOP / FRONT DISPLAY:*\n" + shopText + "\n";
+            }
+            if (storageText) {
+                message += "*STORAGE FREEZER:*\n" + storageText + "\n";
+            }
+            message += "*TOTAL UNITS COUNTED: " + totalUnits + "*";
+
+            const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(message);
+            window.open(url, '_blank');
+        }
+
+        // Run initialization immediately or on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
